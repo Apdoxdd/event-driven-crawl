@@ -23,8 +23,6 @@ constexpr int MAX_CONCURRENT_DOWNLOADS = 300;
 constexpr std::uint64_t MAX_PAGES_TO_CRAWL = 20'000;
 
 unsigned int crawl_count {0};
-double parse_seconds = 0.0;
-std::uint64_t parse_calls = 0;
 
 struct Page 
 {
@@ -114,7 +112,6 @@ int main()
         curl_easy_setopt(tasks[i].easy_handle, CURLOPT_MAXREDIRS, 5L);
         curl_easy_setopt(tasks[i].easy_handle, CURLOPT_USERAGENT, "MyCrawler/1.0");
         curl_easy_setopt(tasks[i].easy_handle, CURLOPT_ACCEPT_ENCODING, "");
-//        curl_easy_setopt(tasks[i].easy_handle, CURLOPT_TIMEOUT_MS, 1500L);
     }
 
     // M - Variables to track the number of running handles, pages started, and successful pages.
@@ -231,12 +228,8 @@ int main()
                     ++successfulPages;
                     // Record when this page was successfully downloaded.
                     successfulFetchTimes.push_back(Clock::now());
-                    auto p0 = Clock::now();
                     parsePage(std::move(finished_task->page), urlQueue);
-                    parse_seconds += std::chrono::duration<double>(Clock::now() - p0).count();
-		    ++parse_calls;
                     crawl_count++;
-		   // std::cout<<"crawl count: "<<crawl_count<<std::endl;
                 }
                 else
                   //  std::cerr << "HTTP/Download error: " << finished_task->page.url << " | " << curl_easy_strerror(result) << " | HTTP " << httpStatus << '\n';
@@ -279,9 +272,8 @@ int main()
         {
         double mins = std::chrono::duration<double>(
                           std::chrono::steady_clock::now() - start).count() / 60.0;
-        std::cout << crawl_count / mins << " pages/min (" << crawl_count << " pages) "
-          << "parse=" << parse_seconds << "s of " << mins * 60.0 << "s, "
-          << (parse_seconds * 1000.0 / parse_calls) << " ms/page\n";
+        std::cout << crawl_count / mins << " pages/min ("
+                  << crawl_count << " pages "<<"\n";
         next_print += 1000;
         }
 
